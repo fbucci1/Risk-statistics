@@ -1,0 +1,68 @@
+<html><body><script>
+function println(s){document.write(s); document.write("<br/>");}
+function toResult(a,d){return a+":"+d;}
+function printResultsAndAddToMarkov(dices,results,markov){
+	var fromNode=toResult(dices[0],dices[1]);
+	println("Results for "+fromNode);
+	var total=0;
+	for(var propertyName in results) {
+		total=total+results[propertyName];
+	}
+	for(var toNode in results) {
+		var prob=results[toNode]/total;
+		println("* Outcome: "+toNode+", Frequency: "+results[toNode]+"/"+total+" = "+Math.round(prob*100)/100);
+		if (!markov[fromNode]){markov[fromNode]=[];} markov[fromNode][toNode]=prob;
+	}
+}
+function printMarkov(markov){
+	println("<pre>");
+	println("//JS for Markov matrix:");
+	println("transitions={};");
+	for(var fromNode in markov) {
+		println("transitions['"+fromNode+"']={};");
+		for(var toNode in markov[fromNode]) {
+			println("transitions['"+fromNode+"']['"+toNode+"']="+markov[fromNode][toNode]+";");
+		}
+	}
+	println("</pre>");
+}
+function calcularResultado(set){
+	var setA=set[0].sort(function(a, b){return b-a});
+	var setD=set[1].sort(function(a, b){return b-a});
+    var surviveA=0, surviveD=0;
+ 	for(var i=0;i<Math.min(setA.length,setD.length);i++){
+		if (setA[i]>setD[i]){surviveA++;}else{surviveD++;}
+	}
+	if (setA.length>setD.length){surviveA+=setA.length-setD.length;} else {surviveD+=setD.length-setA.length;}
+	var result=toResult(surviveA,surviveD);
+	return result;
+}
+function iterate(dices,kind,id,set){
+	var kind2=-1;if (dices[0]>0){kind2=0;} else if (dices[1]>0){kind2=1;}
+    if (kind2!=-1){
+	    var dices2=dices.slice(0);
+		var id2=dices2[kind2];dices2[kind2]--; 
+		for(var i=1;i<=6;i++){
+			var set2=[];set2[0]=set[0].slice(0);set2[1]=set[1].slice(0);
+			set2[kind2].push(i);
+			iterate(dices2,kind2,id2,set2);
+			}
+	} else {
+		var result=calcularResultado(set);
+		if (results[result]){results[result]=results[result]+1;}else{results[result]=1;}
+	}
+}
+
+var markov={};
+for(var a=1;a<=3;a++){
+	for(var d=1;d<=2;d++){
+		var dices=[a,d];var set=[];set[0]=[];set[1]=[];var results={};
+		iterate(dices,-1,"-",set,results);
+		printResultsAndAddToMarkov(dices,results,markov);
+	}
+}
+println("");
+println("Legend: a:b means a(attacking) vs b(defending)");
+println("");
+printMarkov(markov);
+</script></body></html>

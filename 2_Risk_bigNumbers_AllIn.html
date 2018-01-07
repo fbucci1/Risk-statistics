@@ -1,0 +1,184 @@
+<html><body><script>
+//Transitions until the end:
+var transitions={};
+transitions['1:1']={};
+transitions['1:1']['0:1']=0.5833333333333334;
+transitions['1:1']['1:0']=0.4166666666666667;
+transitions['1:2']={};
+transitions['1:2']['0:2']=0.7453703703703703;
+transitions['1:2']['0:1']=0.14853395061728397;
+transitions['1:2']['1:0']=0.10609567901234569;
+transitions['2:1']={};
+transitions['2:1']['0:1']=0.24575617283950618;
+transitions['2:1']['1:0']=0.17554012345679013;
+transitions['2:1']['2:0']=0.5787037037037037;
+transitions['2:2']={};
+transitions['2:2']['0:2']=0.44830246913580246;
+transitions['2:2']['0:1']=0.18904320987654322;
+transitions['2:2']['1:0']=0.13503086419753088;
+transitions['2:2']['2:0']=0.22762345679012347;
+transitions['3:1']={};
+transitions['3:1']['0:1']=0.08362536436899863;
+transitions['3:1']['1:0']=0.05973240312071331;
+transitions['3:1']['2:0']=0.19692001028806586;
+transitions['3:1']['3:0']=0.6597222222222222;
+transitions['3:2']={};
+transitions['3:2']['0:2']=0.21807067805974698;
+transitions['3:2']['0:1']=0.12597532213712342;
+transitions['3:2']['1:0']=0.08998237295508815;
+transitions['3:2']['2:0']=0.1943152482472184;
+transitions['3:2']['3:0']=0.37165637860082307;
+//
+function println(s){document.write(s); document.write("<br/>");}
+function printlnLevel(level,s){if (level<3) println(Array(level+1).join("*")+" "+s);}
+function round(n){return Math.round(n*100)/100;}
+function toResult(a,d){return a+":"+d;}
+function fromResultA(result){return parseInt(result.split(":")[0]);}
+function fromResultD(result){return parseInt(result.split(":")[1]);}
+function balance(result){return fromResultA(result)-fromResultD(result);}
+function sortableResultByAttackAndDefend(result){return fromResultA(result)*100+fromResultD(result);}
+function getStatesAsArrayByBalance(o){
+	var aux=[];
+	for(var toNode in o) {
+		aux.push(toNode);
+	}
+	return aux.sort(function(a, b){return balance(a)-balance(b)});
+}
+function getStatesAsArrayByAttackAndDefend(o){
+	var aux=[];
+	for(var toNode in o) {
+		aux.push(toNode);
+	}
+	return aux.sort(function(a, b){return sortableResultByAttackAndDefend(a)-sortableResultByAttackAndDefend(b)});
+}
+function arrayAsString(a){
+	var s="[";
+	for (var i=0; i<a.length; i++) {
+		if (i!=0){s+=",";}
+		s+="'"+a[i]+"'";
+	}
+	return s+"]";
+}
+function getResults(level,fromNode){
+	//printlnLevel(level,"Compute ['"+fromNode+"']");
+	if (transitions[fromNode]){
+		//printlnLevel(level,"Using already computed results for ['"+fromNode+"']");
+		return transitions[fromNode];
+	}
+	//
+	var a=fromResultA(fromNode);
+	var d=fromResultD(fromNode);
+	var a1=a<=3?a:3;    // Round 1 attack
+	var d1=d<=2?d:2;    // Round 1 defend
+	var aLeft=a-a1;     // Units not used in round 1
+	var dLeft=d-d1;     // Units not used in round 1
+	var fromNode1=toResult(a1,d1);
+	//
+	var results={};
+	//printlnLevel(level,"Computing ['"+fromNode+"']==("+fromNode1+")+"+aLeft+":"+dLeft);
+    var result1=transitions[fromNode1]; // Round 1 results all in
+	for(var toNodeAux in result1) {
+		var a2=aLeft+fromResultA(toNodeAux);  
+		var d2=dLeft+fromResultD(toNodeAux);
+		var toNode=toResult(a2,d2);
+		var prob=result1[toNodeAux];
+		//
+		var sFrom="['"+fromNode+"']==("+fromNode1+")+"+aLeft+":"+dLeft;
+		var sTo="['"+toNode+"']==("+toNodeAux+")+"+aLeft+":"+dLeft;
+		if(a2==0||d2==0){ // Terminal
+			//printlnLevel(level,"result1 "+sFrom+" -> "+sTo+"="+prob+" Terminal");
+			if (!results[toNode]){results[toNode]=0;}
+			results[toNode]+=prob;
+		}else{ //Continue
+			//printlnLevel(level,"result1 "+sFrom+" -> "+sTo+"="+prob+" Non-terminal");
+			var results2=getResults(level+1,toNode);
+			for(var toNode2 in results2) {
+				var prob2=results2[toNode2];
+				//printlnLevel(level,"&nbsp;&nbsp;result2 "+sFrom+" -> "+sTo+" -> ['"+toNode2+"']="+prob+"*"+prob2+" terminal");
+				if (!results[toNode2]){results[toNode2]=0;}
+				results[toNode2]+=prob*prob2;
+			}
+		}
+	}
+	//
+	transitions[fromNode]=results; // Cache for later use.
+	return results;
+}
+//
+var A_FROM=1,A_TO=10,D_FROM=1,D_TO=10;
+for (var a=A_FROM;a<=A_TO;a++){
+	for (var d=D_FROM;d<=D_TO;d++){
+		var fromNode=toResult(a,d);
+		var results=getResults(1,fromNode);
+	}
+}
+//
+println("<pre>");
+println("transitions={};");
+var allFinalStates={};
+for(var fromNode in transitions) {
+	println("transitions['"+fromNode+"']={};");
+	for(var toNode in transitions[fromNode]) {
+		println("transitions['"+fromNode+"']['"+toNode+"']="+transitions[fromNode][toNode]+";");
+		allFinalStates[toNode]=1;
+	}
+}
+println("");
+println("//All initial states:");
+var a1=getStatesAsArrayByAttackAndDefend(transitions);
+println("allInitialStates="+arrayAsString(a1));
+println("");
+println("//All final states:");
+var a2=getStatesAsArrayByBalance(allFinalStates);
+println("allFinalStates="+arrayAsString(a2));
+println("");
+println("** CSV Table 1: Fight outcomes and probabilities **");
+var s="From/To,";for (var toNode in a2){s+=a2[toNode]+",";};s+="ProbWinCountry,ExpBalance";println(s);
+var probWins={},expBalances={};
+for (var ia1 in a1){
+	var fromNode=a1[ia1];
+	s=fromNode+",";
+	var probWin=0;
+	var expBalance=0;
+	for (var ia2 in a2){
+		var toNode=a2[ia2];
+		var prob=transitions[fromNode][toNode];
+		var bal=balance(toNode);
+		if (prob){
+			s+=round(prob);
+			if (bal>0) {probWin+=prob;}
+			expBalance+=prob*bal;
+		}
+		s+=",";
+	}
+	probWins[fromNode]=probWin,expBalances[fromNode]=expBalance;
+	s+=round(probWin)+","+round(expBalance);
+	println(s);
+}
+println("");
+println("** CSV Table 2: Probability of winning the country **");
+var s="From/To,";for(var d=D_FROM;d<=D_TO;d++){s+=d+",";};println(s);
+for (var a=A_FROM;a<=A_TO;a++){
+	var s=a+",";
+	for (var d=D_FROM;d<=D_TO;d++){
+		var fromNode=toResult(a,d);
+		s+=round(probWins[fromNode])+",";
+	}
+	println(s);
+}
+println("");
+println("** CSV Table 3: Expected balance (number of units of the attacker in the target country after war) **");
+var s="From/To,";for(var d=D_FROM;d<=D_TO;d++){s+=d+",";};println(s);
+for (var a=A_FROM;a<=A_TO;a++){
+	var s=a+",";
+	for (var d=D_FROM;d<=D_TO;d++){
+		var fromNode=toResult(a,d);
+		s+=round(expBalances[fromNode])+",";
+	}
+	println(s);
+}
+println("</pre>");
+println("");
+println("Legend: a:b means a(attacking) vs b(defending)");
+println("");
+</script></body></html>
