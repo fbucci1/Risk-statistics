@@ -177,6 +177,24 @@ for (var a=A_FROM;a<=A_TO;a++){
 	}
 	println(s);
 }
+println("");
+println("//Probability of winning the country");
+println("probWinCountry={};");
+for (var a=A_FROM;a<=A_TO;a++){
+	for (var d=D_FROM;d<=D_TO;d++){
+		var fromNode=toResult(a,d);
+		println("probWinCountry['"+fromNode+"']="+probWins[fromNode]+";");
+	}
+}
+println("");
+println("//Expected balance (number of units of the attacker in the target country after war)");
+println("expectedBalance={};");
+for (var a=A_FROM;a<=A_TO;a++){
+	for (var d=D_FROM;d<=D_TO;d++){
+		var fromNode=toResult(a,d);
+		println("expectedBalance['"+fromNode+"']="+expBalances[fromNode]+";");
+	}
+}
 println("</pre>");
 println("");
 println("Legend: a:b means a(attacking) vs b(defending)");
