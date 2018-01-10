@@ -133,7 +133,7 @@ var a2=getStatesAsArrayByBalance(allFinalStates);
 println("allFinalStates="+arrayAsString(a2));
 println("");
 println("** CSV Table 1: Fight outcomes and probabilities **");
-var s="From/To,";for (var toNode in a2){s+=a2[toNode]+",";};s+="ProbWinCountry,ExpBalance";println(s);
+var s="From/To,";for (var toNode in a2){s+=balance(a2[toNode])+",";};s+="ProbWinCountry,ExpBalance";println(s);
 var probWins={},expBalances={};
 for (var ia1 in a1){
 	var fromNode=a1[ia1];
@@ -145,7 +145,7 @@ for (var ia1 in a1){
 		var prob=transitions[fromNode][toNode];
 		var bal=balance(toNode);
 		if (prob){
-			s+=round(prob);
+			s+=prob;
 			if (bal>0) {probWin+=prob;}
 			expBalance+=prob*bal;
 		}
@@ -162,7 +162,7 @@ for (var a=A_FROM;a<=A_TO;a++){
 	var s=a+",";
 	for (var d=D_FROM;d<=D_TO;d++){
 		var fromNode=toResult(a,d);
-		s+=round(probWins[fromNode])+",";
+		s+=probWins[fromNode]+",";
 	}
 	println(s);
 }
@@ -173,7 +173,7 @@ for (var a=A_FROM;a<=A_TO;a++){
 	var s=a+",";
 	for (var d=D_FROM;d<=D_TO;d++){
 		var fromNode=toResult(a,d);
-		s+=round(expBalances[fromNode])+",";
+		s+=expBalances[fromNode]+",";
 	}
 	println(s);
 }
